@@ -10,7 +10,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.mysendyapp"
-        minSdk = 24
+        minSdk = 35
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
@@ -44,6 +44,7 @@ dependencies {
     implementation(files("libs/sendy_app_sdk.aar"))
     implementation (libs.gson)
     implementation (libs.nv.websocket.client)
+    implementation (libs.androidx.core.splashscreen)
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
