@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">MySendyApp</string>
+    <string name="btn_continue">Continue</string>
 </resources>
