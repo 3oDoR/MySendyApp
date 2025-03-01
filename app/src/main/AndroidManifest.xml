@@ -12,7 +12,11 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.MySendyApp" >
-
+        <activity
+            android:name=".SmsActivity"
+            android:exported="false"
+            android:label="@string/title_activity_sms"
+            android:theme="@style/Theme.MySendyApp" />
         <activity
             android:name=".PhoneActivity"
             android:exported="true"

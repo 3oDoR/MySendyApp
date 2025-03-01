@@ -3,6 +3,7 @@ package com.example.mysendyapp.screens
 import android.content.Context
 import android.content.Intent
 import android.media.session.MediaSession.Token
+import android.os.Looper
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -100,7 +101,10 @@ fun PhoneScreen(modifier: Modifier = Modifier) {
                 onClick = {
                     if (strState.length == 12 && errorState.isEmpty()) {
                         if ( loginAtAuthWS(context, strState)) {
-                            startNewActivity(context, SmsActivity::class.java)
+                            val intent = Intent(context, SmsActivity::class.java).apply {
+                                putExtra("phone", strState)
+                            }
+                            context.startActivity(intent)
                         }
                     }
                 }
@@ -111,10 +115,7 @@ fun PhoneScreen(modifier: Modifier = Modifier) {
     }
 }
 
-private fun startNewActivity(context: Context, activityClass: Class<*>) {
-    val intent = Intent(context, activityClass)
-    context.startActivity(intent)
-}
+
 
 private fun checkTextField(str: String): Pair<String, String> {
     println(str)
@@ -145,14 +146,18 @@ private fun checkTextField(str: String): Pair<String, String> {
 fun getTermsOfUseWS(context: Context) {
     API.outLog("Тест: WS. Получение текста пользовательского соглашения мобильного приложения")
     val runResult = api.getTermsOfUseWS(context, object : ApiCallback() {
-
         override fun onCompleted(res: Boolean) {
             if (!res || getErrNo() != 0) {
                 API.outLog("Тест: WS. Выполнение запроса завершилось с ошибкой:$context")
 
             } else {
-                API.outLog("Тест: WS. Текст соглашения:\r\n" + (this.oResponse as TermsOfUseRs).TextTermsOfUse)
-                API.outLog("Тест: WS. Текст 2: ${this.oResponse}")
+                val text =  (this.oResponse as TermsOfUseRs).TextTermsOfUse
+
+                API.outLog("Тест:1 WS. Текст соглашения:\r\n ${this.oResponse}")
+                API.outLog("Тест:1 WS. Текст соглашения:\r\n $text")
+                API.outLog("Тест:1 WS. Текст соглашения:\r\n ${(oResponse as TermsOfUseRs).TextTermsOfUse}")
+
+
             }
         }
     })
@@ -160,6 +165,7 @@ fun getTermsOfUseWS(context: Context) {
         API.outLog("Тест: WS. runResult ERROR: \r\n" + runResult.toString())
     } else {
         API.outLog("Тест: WS. getTermsOfUseWS: запущено асинхронно!")
+        API.outLog("Тест: WS. getTermsOfUseWS: запущено асинхронно! $runResult")
 
     }
 }

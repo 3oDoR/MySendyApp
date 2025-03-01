@@ -11,6 +11,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import com.example.mysendyapp.screens.SmsScreen
 import com.example.mysendyapp.ui.theme.MySendyAppTheme
 
 class SmsActivity : ComponentActivity() {
@@ -19,11 +20,8 @@ class SmsActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             MySendyAppTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
+                Scaffold( modifier = Modifier.fillMaxSize() ) { innerPadding ->
+                    SmsScreen(modifier = Modifier.padding(innerPadding))
                 }
             }
         }
