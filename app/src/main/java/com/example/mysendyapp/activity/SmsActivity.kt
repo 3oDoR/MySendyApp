@@ -1,4 +1,4 @@
-package com.example.mysendyapp
+package com.example.mysendyapp.activity
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -11,8 +11,14 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.mysendyapp.model.RegistrationRepository
 import com.example.mysendyapp.screens.SmsScreen
 import com.example.mysendyapp.ui.theme.MySendyAppTheme
+import com.example.mysendyapp.viewmodel.PhoneViewModel
+import com.example.mysendyapp.viewmodel.SmsViewModel
 
 class SmsActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -20,26 +26,16 @@ class SmsActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             MySendyAppTheme {
-                Scaffold( modifier = Modifier.fillMaxSize() ) { innerPadding ->
-                    SmsScreen(modifier = Modifier.padding(innerPadding))
+                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                    SmsScreen(modifier = Modifier.padding(innerPadding), viewModel<SmsViewModel>(
+                        factory = object : ViewModelProvider.Factory {
+                            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                                return SmsViewModel(RegistrationRepository()) as T
+                            }
+                        }
+                    ))
                 }
             }
         }
-    }
-}
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    MySendyAppTheme {
-        Greeting("Android")
     }
 }
