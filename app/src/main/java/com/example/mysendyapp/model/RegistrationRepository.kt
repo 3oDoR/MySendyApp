@@ -1,7 +1,8 @@
 package com.example.mysendyapp.model
 
 import android.content.Context
-import android.os.Looper
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import land.sendy.pfe_sdk.api.API
 import land.sendy.pfe_sdk.api.API.api
 import land.sendy.pfe_sdk.model.pfe.response.AuthActivateRs
@@ -16,17 +17,20 @@ class RegistrationRepository {
     fun getTermsOfUseWS(context: Context) {
 
         API.outLog("Получение текста пользовательского соглашения мобильного приложения")
+
+
         val runResult = api.getTermsOfUse(context, object : ApiCallback() {
+
             override fun onCompleted(res: Boolean) {
                 if (!res || errNo != 0) {
                     API.outLog("Выполнение запроса завершилось с ошибкой:${oResponse}")
-
                 } else {
                     API.outLog("Текст соглашения:\r\n ${(oResponse as TermsOfUseRs).TextTermsOfUse}")
 
                 }
             }
         })
+
         if (runResult != null && runResult.hasError()) {
             API.outLog("runResult ERROR: \r\n$runResult")
         } else {
@@ -80,8 +84,6 @@ class RegistrationRepository {
                         } else if (response.Active != null && response.Active) {
                             API.outLog("Девайс астивирован!")
                             api.acivateDevice(context)
-                        } else {
-
                         }
                     } else {
                         API.outLog("Сервер вернул ошибку; " + this.toString());
@@ -99,5 +101,17 @@ class RegistrationRepository {
         if (runResult != null && runResult.hasError()) {
             API.outLog("Запрос не был запущен:\r\n" + runResult.toString());
         }
+    }
+
+
+    fun isInternetAvailable(context: Context): Boolean {
+        val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val network = connectivityManager.activeNetwork
+        val networkCapabilities = connectivityManager.getNetworkCapabilities(network)
+        return networkCapabilities != null && (
+                networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) ||
+                        networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) ||
+                        networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)
+                )
     }
 }

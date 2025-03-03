@@ -1,6 +1,8 @@
 package com.example.mysendyapp.viewmodel
 
 import android.content.Context
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -61,14 +63,11 @@ class PhoneViewModel(private val registrationRepository: RegistrationRepository)
     }
 
     fun getTerms(context: Context) {
-        try {
+        if (checkInternetConnection(context)) {
             val terms = registrationRepository.getTermsOfUseWS(context)
-            println("Here and terms = $terms")
-            errorInfo = terms
-        } catch (e: Exception) {
-
+        } else {
+            errorInfo = "Don't have Internet"
         }
-
     }
 
     fun sendNumber(context: Context): Boolean {
@@ -80,6 +79,10 @@ class PhoneViewModel(private val registrationRepository: RegistrationRepository)
             errorInfo = "Offer is not accept"
             return false
         }
+        if (!checkInternetConnection(context)) {
+            errorInfo = "Don't have Internet"
+            return false
+        }
         val auth = registrationRepository.loginAtAuthWS(context, phone)
         if (auth != null) {
             if (auth.errorText.isNotEmpty()) {
@@ -89,5 +92,10 @@ class PhoneViewModel(private val registrationRepository: RegistrationRepository)
         }
         errorInfo = ""
         return true
+    }
+
+    private fun checkInternetConnection(context: Context): Boolean {
+        return registrationRepository.isInternetAvailable(context)
+
     }
 }

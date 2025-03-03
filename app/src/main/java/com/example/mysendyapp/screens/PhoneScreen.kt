@@ -86,12 +86,12 @@ fun PhoneScreen(
             Button(
                 modifier = Modifier.fillMaxWidth(),
                 onClick = {
-                    if (viewModel.sendNumber(context)) {
-                        val intent = Intent(context, SmsActivity::class.java).apply {
-                            putExtra("phone", viewModel.phone)
+                        if (viewModel.sendNumber(context)) {
+                            val intent = Intent(context, SmsActivity::class.java).apply {
+                                putExtra("phone", viewModel.phone)
+                            }
+                            context.startActivity(intent)
                         }
-                        context.startActivity(intent)
-                    }
                 }
             ) {
                 Text(stringResource(R.string.btn_continue))

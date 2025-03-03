@@ -38,7 +38,17 @@ class SmsViewModel(private val registrationRepository: RegistrationRepository) :
     }
 
     fun sendSmsCode(phone: String, tokenType: String, token: String, context: Context) {
-        registrationRepository.activate(phone, tokenType, token, context)
+        if (checkInternetConnection(context)) {
+            errorInfo = ""
+            registrationRepository.activate(phone, tokenType, token, context)
+        } else {
+            errorInfo = "Don't have Internet"
+        }
+    }
+
+    private fun checkInternetConnection(context: Context): Boolean {
+        return registrationRepository.isInternetAvailable(context)
+
     }
 
 }
