@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
@@ -20,9 +21,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewModelScope
 import com.example.mysendyapp.R
 import com.example.mysendyapp.activity.SmsActivity
 import com.example.mysendyapp.viewmodel.PhoneViewModel
+import kotlinx.coroutines.launch
 
 
 @Composable
@@ -61,13 +64,23 @@ fun PhoneScreen(
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                     singleLine = true
                 )
-                Text(text = viewModel.errorInfo)
+                LazyColumn {
+                    items(1) {
+                        Text(text = viewModel.errorInfo)
+                    }
+                }
             }
         }
         Row {
             Button(
                 onClick = {
-                    viewModel.getTerms(context)
+                    viewModel.viewModelScope.launch {
+                        try {
+                            viewModel.getTerms(context)
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
+                    }
                 }
             ) {
                 Text("getTerms")

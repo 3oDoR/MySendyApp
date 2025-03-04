@@ -3,6 +3,8 @@ package com.example.mysendyapp.model
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.suspendCancellableCoroutine
 import land.sendy.pfe_sdk.api.API
 import land.sendy.pfe_sdk.api.API.api
 import land.sendy.pfe_sdk.model.pfe.response.AuthActivateRs
@@ -10,32 +12,33 @@ import land.sendy.pfe_sdk.model.pfe.response.BResponse
 import land.sendy.pfe_sdk.model.pfe.response.TermsOfUseRs
 import land.sendy.pfe_sdk.model.types.ApiCallback
 import land.sendy.pfe_sdk.model.types.LoaderError
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
+import kotlin.coroutines.suspendCoroutine
 
 class RegistrationRepository {
 
-
-    fun getTermsOfUseWS(context: Context) {
-
+    suspend fun getTermsOfUseWS(context: Context): String {
         API.outLog("Получение текста пользовательского соглашения мобильного приложения")
 
-
-        val runResult = api.getTermsOfUse(context, object : ApiCallback() {
-
-            override fun onCompleted(res: Boolean) {
-                if (!res || errNo != 0) {
-                    API.outLog("Выполнение запроса завершилось с ошибкой:${oResponse}")
-                } else {
-                    API.outLog("Текст соглашения:\r\n ${(oResponse as TermsOfUseRs).TextTermsOfUse}")
-
-                }
+        try {
+            val termsOfUseRs = suspendCancellableCoroutine { continuation ->
+                api.getTermsOfUse(context, object : ApiCallback() {
+                    override fun onCompleted(res: Boolean) {
+                        if (!res || errNo != 0) {
+                            continuation.resumeWithException(Exception("Выполнение запроса завершилось с ошибкой: ${oResponse}"))
+                        } else {
+                            continuation.resume(oResponse as TermsOfUseRs)
+                        }
+                    }
+                })
             }
-        })
-
-        if (runResult != null && runResult.hasError()) {
-            API.outLog("runResult ERROR: \r\n$runResult")
-        } else {
-            API.outLog("getTermsOfUseWS: запущено асинхронно!")
+            API.outLog("Текст соглашения:\r\n ${termsOfUseRs.TextTermsOfUse}")
+            return termsOfUseRs.TextTermsOfUse.toString()
+        } catch (e: Exception) {
+            API.outLog("Ошибка при получении текста соглашения: ${e.message}")
         }
+        return "Err"
     }
 
     fun loginAtAuthWS(context: Context, phone: String): LoaderError? {
@@ -62,56 +65,58 @@ class RegistrationRepository {
         return runResult
     }
 
-    fun activate(myPhone: String, tokenType: String, token: String, context: Context) {
-
+    suspend fun activate(myPhone: String, tokenType: String, token: String, context: Context): String {
         API.outLog("Тест: WS. Попытка активации кошелька " + myPhone + ", " + tokenType + ": " + token)
-        val runResult = api.activateWllet(context, token, tokenType, object : ApiCallback() {
-            override fun <T : BResponse?> onSuccess(data: T) {
-                API.outLog("m data $data")
-                API.outLog("m Errno ${oResponse.Errno}")
-                API.outLog("m Error  ${oResponse.Error}")
-                API.outLog("m Reply  ${oResponse.Reply}")
-                API.outLog("m Subject  ${oResponse.Subject}")
-                if (data != null) {
-                    if (this.errNo == 0) {
-                        val response = this.oResponse as AuthActivateRs
-                        // {"Errno":0,"Reply":"pfe/auth/activate","Subject":"82a0afb9-7ba3-4a5b-bbba-815105cbcac6"}
-                        API.outLog("$response")
-                        // Ставлю вручную, так как не понял, как получить другой ответ от сервера (приходит ответ с ошибкой errno или ответ, как указано выше).
-                        response.Active = true
-                        if (response.TwoFactor != null && response.TwoFactor && API.checkString(response.Email)) {
-                            API.outLog("Введите код активации из EMAIL " + response.Email)
-                        } else if (response.Active != null && response.Active) {
-                            API.outLog("Девайс астивирован!")
-                            api.acivateDevice(context)
+        try {
+            val act = suspendCancellableCoroutine { continuation ->
+                api.activateWllet(context, token, tokenType, object : ApiCallback() {
+                    override fun <T : BResponse?> onSuccess(data: T) {
+                        if (data != null) {
+                            if (this.errNo == 0) {
+                                val response = this.oResponse as AuthActivateRs
+                                response.Active = true
+                                if (response.TwoFactor != null && response.TwoFactor && API.checkString(
+                                        response.Email
+                                    )
+                                ) {
+                                    API.outLog("Введите код активации из EMAIL " + response.Email)
+                                    continuation.resume(oResponse.Errno)
+                                } else if (response.Active != null && response.Active) {
+                                    API.outLog("Девайс астивирован!")
+                                    api.acivateDevice(context)
+                                    continuation.resume(oResponse.Errno)
+                                }
+                            } else {
+                                API.outLog("Сервер вернул ошибку; " + this.toString());
+                                continuation.resume(oResponse.Errno)
+                            }
+                        } else {
+                            API.outLog("onSuccess. Проблема: сервер не вернул данные!");
+                            continuation.resume(oResponse.Errno)
                         }
-                    } else {
-                        API.outLog("Сервер вернул ошибку; " + this.toString());
+                        API.outLog("IsActivated ${api.isActivated(context)}")
                     }
-                } else {
-                    API.outLog("onSuccess. Проблема: сервер не вернул данные!");
-                }
-                API.outLog("IsActivated ${api.isActivated(context)}")
+                })
             }
-
-            override fun onFail(error: LoaderError) {
-                API.outLog("Фатальная ошибка: " + error.toString());
+            if (act.toString() == "0") {
+                return "Successs"
+            }  else {
+                return "Fail"
             }
-        })
-        if (runResult != null && runResult.hasError()) {
-            API.outLog("Запрос не был запущен:\r\n" + runResult.toString());
+        } catch (e: Exception) {
+            API.outLog("Error")
+        }
+        return "False"
+    }
+        fun isInternetAvailable(context: Context): Boolean {
+            val connectivityManager =
+                context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+            val network = connectivityManager.activeNetwork
+            val networkCapabilities = connectivityManager.getNetworkCapabilities(network)
+            return networkCapabilities != null && (
+                    networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) ||
+                            networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) ||
+                            networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)
+                    )
         }
     }
-
-
-    fun isInternetAvailable(context: Context): Boolean {
-        val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-        val network = connectivityManager.activeNetwork
-        val networkCapabilities = connectivityManager.getNetworkCapabilities(network)
-        return networkCapabilities != null && (
-                networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) ||
-                        networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) ||
-                        networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)
-                )
-    }
-}

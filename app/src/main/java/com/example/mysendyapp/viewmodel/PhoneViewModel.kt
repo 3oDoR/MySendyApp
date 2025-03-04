@@ -6,6 +6,7 @@ import android.net.NetworkCapabilities
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.core.text.parseAsHtml
 import androidx.lifecycle.ViewModel
 import com.example.mysendyapp.model.RegistrationRepository
 
@@ -62,9 +63,9 @@ class PhoneViewModel(private val registrationRepository: RegistrationRepository)
         errorInfo = ""
     }
 
-    fun getTerms(context: Context) {
+    suspend fun getTerms(context: Context) {
         if (checkInternetConnection(context)) {
-            val terms = registrationRepository.getTermsOfUseWS(context)
+            errorInfo = registrationRepository.getTermsOfUseWS(context).parseAsHtml().toString()
         } else {
             errorInfo = "Don't have Internet"
         }

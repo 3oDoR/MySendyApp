@@ -17,7 +17,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewModelScope
 import com.example.mysendyapp.viewmodel.SmsViewModel
+import kotlinx.coroutines.launch
 
 
 @Composable
@@ -68,7 +70,13 @@ fun SmsScreen(
                     if (viewModel.smsCode.length == 6) {
                         val phone = activity?.intent?.getStringExtra("phone")
                         if (phone != null) {
-                            viewModel.sendSmsCode(phone, "sms", viewModel.smsCode, context)
+                            viewModel.viewModelScope.launch {
+                                try {
+                                    viewModel.sendSmsCode(phone, "sms", viewModel.smsCode, context)
+                                } catch (e: Exception) {
+                                    e.printStackTrace()
+                                }
+                            }
                         }
                     }
                 }
