@@ -14,27 +14,30 @@ class SmsViewModel(private val registrationRepository: RegistrationRepository) :
     var errorInfo by mutableStateOf("")
         private set
 
-
     fun checkSmsCode(str: String) {
-        if (str.length <= 6) {
-            if (str.isEmpty()) {
-                smsCode = ""
-                errorInfo = "Code less than 6 character"
-                return
-            }
-
-            for (i in 0..str.lastIndex) {
-                if (str[i].digitToIntOrNull() == null) {
-                    smsCode = str.substring(0, i)
-                    errorInfo = "The $i character should be a number"
-                    return
-                }
-            }
-            smsCode = str
+        if (str.isEmpty()) {
+            smsCode = ""
             errorInfo = ""
             return
         }
-        smsCode = str.substring(0, 6)
+        if (str.length > 6) {
+            println("here 1 $smsCode and ${smsCode.length}")
+            smsCode = str.substring(0, 6)
+            println("here 2 $smsCode")
+            errorInfo = "Max length"
+            checkSmsCode(smsCode)
+            return
+        }
+
+        for (i in 0..str.lastIndex) {
+            if (str[i].digitToIntOrNull() == null) {
+                smsCode = str.substring(0, i)
+                errorInfo = "The $i character should be a number"
+                return
+            }
+        }
+        smsCode = str
+        errorInfo = ""
     }
 
     fun sendSmsCode(phone: String, tokenType: String, token: String, context: Context) {
