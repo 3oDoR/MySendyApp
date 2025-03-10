@@ -12,10 +12,15 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewModelScope
 import com.example.mysendyapp.viewmodel.SmsViewModel
@@ -30,6 +35,9 @@ fun SmsScreen(
 
     val context = LocalContext.current
     val activity = LocalActivity.current
+    var textFieldValue by remember {
+        mutableStateOf(TextFieldValue(viewModel.smsCode))
+    }
 
     Column(
         modifier = modifier
@@ -44,9 +52,12 @@ fun SmsScreen(
         ) {
             TextField(
                 modifier = Modifier.fillMaxWidth(),
-                value = viewModel.smsCode,
+                value = textFieldValue,
                 onValueChange = {
-                    viewModel.checkSmsCode(it)
+                    if (viewModel.checkSmsCode(it.text)) {
+                        textFieldValue = it
+                    }
+
                 },
                 label = {
                     Text("Enter code:")

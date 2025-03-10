@@ -14,25 +14,26 @@ class SmsViewModel(private val registrationRepository: RegistrationRepository) :
     var errorInfo by mutableStateOf("")
         private set
 
-    fun checkSmsCode(str: String) {
+    fun checkSmsCode(str: String): Boolean {
         if (str.isEmpty()) {
             smsCode = ""
             errorInfo = ""
-            return
+            return true
         }
         if (str.length > 6) {
-            return
+            return false
         }
 
         for (i in 0..str.lastIndex) {
             if (str[i].digitToIntOrNull() == null) {
                 smsCode = str.substring(0, i)
                 errorInfo = "The $i character should be a number"
-                return
+                return false
             }
         }
         smsCode = str
         errorInfo = ""
+        return true
     }
 
     suspend fun sendSmsCode(phone: String, tokenType: String, token: String, context: Context) {

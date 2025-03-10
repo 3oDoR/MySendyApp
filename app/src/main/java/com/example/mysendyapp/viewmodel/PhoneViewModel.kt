@@ -8,6 +8,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.core.text.parseAsHtml
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -46,25 +47,26 @@ class PhoneViewModel(private val registrationRepository: RegistrationRepository)
         openDialog = !openDialog
     }
 
-    fun checkTextField(str: String) {
+    fun checkTextField(str: String): Boolean {
         if (str.length > 10) {
-            return
+            return false
         }
         if (str.isEmpty()) {
             phone = ""
             errorInfo = ""
-            return
+            return true
         }
 
         for (i in 0..str.lastIndex) {
             if (str[i].digitToIntOrNull() == null) {
                 phone = str.substring(0, i)
                 errorInfo = "The ${i + 1} character should be a number"
-                return
+                return false
             }
         }
         phone = str
         errorInfo = ""
+        return true
     }
 
     suspend fun getTerms(context: Context) {
