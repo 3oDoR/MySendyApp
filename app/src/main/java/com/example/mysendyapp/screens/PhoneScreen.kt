@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Text
@@ -21,7 +22,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.mysendyapp.R
 import com.example.mysendyapp.activity.SmsActivity
 import com.example.mysendyapp.viewmodel.PhoneViewModel
@@ -37,6 +40,7 @@ fun PhoneScreen(
 
     val context = LocalContext.current
 
+    MyAlertDialog(viewModel)
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -49,17 +53,18 @@ fun PhoneScreen(
             contentAlignment = Alignment.BottomCenter
         ) {
             Column {
+                Text("Enter phone number:")
                 TextField(
                     modifier = Modifier.fillMaxWidth(),
                     value = viewModel.phone,
                     onValueChange = {
                         viewModel.checkTextField(it)
                     },
-                    label = {
-                        Text("Enter phone number:")
+                    leadingIcon = {
+                        Text("+7")
                     },
                     placeholder = {
-                        Text("+7 XXX XXX XX XX")
+                        Text("XXX XXX XX XX")
                     },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                     singleLine = true
@@ -71,24 +76,20 @@ fun PhoneScreen(
                 }
             }
         }
-        Row {
-            Button(
-                onClick = {
-                    viewModel.viewModelScope.launch {
-                        try {
-                            viewModel.getTerms(context)
-                        } catch (e: Exception) {
-                            e.printStackTrace()
-                        }
+        Button(
+            modifier = Modifier.fillMaxWidth(),
+            onClick = {
+                viewModel.viewModelScope.launch {
+                    try {
+                        viewModel.getTerms(context)
+                    } catch (e: Exception) {
+                        e.printStackTrace()
                     }
+                    viewModel.openDialog()
                 }
-            ) {
-                Text("getTerms")
             }
-            Checkbox(
-                checked = viewModel.isOffer,
-                onCheckedChange = { viewModel.updateIsOffer() }
-            )
+        ) {
+            Text("getTerms")
         }
         Box(
             modifier = Modifier
@@ -99,16 +100,52 @@ fun PhoneScreen(
             Button(
                 modifier = Modifier.fillMaxWidth(),
                 onClick = {
-                        if (viewModel.sendNumber(context)) {
-                            val intent = Intent(context, SmsActivity::class.java).apply {
-                                putExtra("phone", viewModel.phone)
-                            }
-                            context.startActivity(intent)
+                    if (viewModel.sendNumber(context)) {
+                        val intent = Intent(context, SmsActivity::class.java).apply {
+                            putExtra("phone", viewModel.phone)
                         }
+                        context.startActivity(intent)
+                    }
                 }
             ) {
                 Text(stringResource(R.string.btn_continue))
             }
         }
+    }
+}
+
+
+@Composable
+fun MyAlertDialog(viewModel: PhoneViewModel = viewModel()) {
+    if (viewModel.openDialog) {
+        AlertDialog(
+            onDismissRequest = { viewModel.openDialog() },
+            title = { Text(text = "User agreement") },
+            text = {
+                LazyColumn {
+                    items(1) {
+                        Text(viewModel.userAgreements)
+                    }
+                }
+            },
+            confirmButton = {
+                Button({
+                    viewModel.openDialog()
+                    viewModel.acceptOffer()
+                    viewModel.clearErrorMessage()
+                }) {
+                    Text("Accept", fontSize = 22.sp)
+                }
+            },
+            dismissButton = {
+                Button({
+                    viewModel.openDialog()
+                    viewModel.dismissOffer()
+                    viewModel.clearErrorMessage()
+                }) {
+                    Text("Cancel", fontSize = 22.sp)
+                }
+            }
+        )
     }
 }

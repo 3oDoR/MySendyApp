@@ -21,11 +21,6 @@ class SmsViewModel(private val registrationRepository: RegistrationRepository) :
             return
         }
         if (str.length > 6) {
-            println("here 1 $smsCode and ${smsCode.length}")
-            smsCode = str.substring(0, 6)
-            println("here 2 $smsCode")
-            errorInfo = "Max length"
-            checkSmsCode(smsCode)
             return
         }
 
